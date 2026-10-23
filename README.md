@@ -112,12 +112,20 @@ CLI only after you choose **Attach** or **Start** in Settings.
    | App | Start command | Default port |
    | --- | --- | --- |
    | WordCraft | `wordcraft --control 7981` | `7981` |
-   | GridCraft | `gridcraft --control 7979` | `7979` |
+   | GridCraft | `npm run start:gridcraft` or double-click `scripts\start-gridcraft-for-bebo.cmd` | `7979` |
    | DeckCraft | `deckcraft --control 7990` | `7990` |
 
-3. Run Bebo with `npm run dev`, open the local Bebo page, then open **Settings → Bebo for Craft apps**.
-   Choose **Attach to open window** and click **Attach** for the app. The default port is filled in;
-   you can change it if you started the app on another port.
+3. For GridCraft on Windows, run `npm run start:gridcraft` (or double-click the script above). It starts
+   GridCraft with the graphics workaround and control port, starts Bebo, and opens the Bebo page.
+   In **Settings → Bebo for Craft apps**, choose **Attach to open window** and click **Attach** for GridCraft.
+   For WordCraft or DeckCraft, start Bebo with `npm run dev`, open the local page, then click **Attach**.
+
+On Windows, the GridCraft launcher sets `WGPU_BACKEND=gl` for that process and starts the app with
+the Bebo control port. It also starts Bebo's local companion server and opens its page. This works around
+a DX12 startup shader failure on affected PCs without changing your Windows environment. If GridCraft
+is already open without control enabled, save your work, close it, then run the launcher. Bebo looks for
+Craft app CLIs in their standard Program Files folders, so you do not need to add `gridcraft-cli` to PATH
+or configure its full path manually.
 
 The Bebo pane can stay beside the Craft app while you work. The control ports bind to the local
 machine; use them only on a trusted device. WordCraft authenticates its control connection with the
@@ -129,6 +137,9 @@ Choose **Start separate session** to let Bebo open or create a document outside 
 For file-based workflows, copy `bebo.mcp.example.json` to `bebo.mcp.json` and edit the command and
 file roots for your machine. This local file is ignored by Git. Set `BEBO_MCP_CONFIG` to use another
 config location. Existing `aioa.mcp.json` files and `AIOA_MCP_CONFIG` are still read for migration.
+
+To verify the installed GridCraft CLI and Bebo's MCP connection without changing a workbook, run
+`npm run check:gridcraft`. It connects to a temporary headless session, evaluates a small formula, then disconnects.
 
 Both modes use local standard-I/O MCP processes. The selected AI provider receives document context
 and tool results as needed to answer your request; provider keys stay in Bebo and are not passed to

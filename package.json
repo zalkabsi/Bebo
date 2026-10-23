@@ -15,6 +15,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "start:gridcraft": "node scripts/start-gridcraft-for-bebo.mjs",
+    "check:gridcraft": "node scripts/check-gridcraft-mcp.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

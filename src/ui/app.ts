@@ -826,7 +826,9 @@ export class BeboApp extends LitElement {
             ${this.mcpServers.map((server) => {
               const preference = this.getMcpConnectionPreference(server);
               const executable = server.id === "wordcraft" ? "wordcraft" : server.id === "gridcraft" ? "gridcraft" : "deckcraft";
-              const controlCommand = `${executable} --control ${preference.controlPort}`;
+              const controlCommand = server.id === "gridcraft"
+                ? `npm run start:gridcraft -- --port ${preference.controlPort}`
+                : `${executable} --control ${preference.controlPort}`;
               return html`
                 <div class="mcp-server">
                   <div class="mcp-server-info">
@@ -863,7 +865,9 @@ export class BeboApp extends LitElement {
                           })}
                         />
                       </label>
-                      <span class="hint">Start it with <code>${controlCommand}</code>; restart if needed.</span>
+                      <span class="hint">${server.id === "gridcraft"
+                        ? html`Run <code>${controlCommand}</code> to open GridCraft and Bebo, then click Attach.`
+                        : html`Start it with <code>${controlCommand}</code>; restart if needed.`}</span>
                     ` : html`
                       <span class="hint">Starts a separate document session using arguments from <code>bebo.mcp.json</code>.</span>
                     `}

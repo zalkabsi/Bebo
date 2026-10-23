@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { URL } from "node:url";
 import type { Plugin } from "vite";
 
@@ -62,11 +62,28 @@ const APP_DEFINITIONS = [
   },
 ] as const;
 
+function findInstalledCli(id: string, label: string): string | undefined {
+  if (process.platform !== "win32") return undefined;
+
+  const executable = `${id}-cli.exe`;
+  const roots = [
+    process.env["ProgramFiles(x86)"],
+    process.env.ProgramFiles,
+    process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, "Programs") : undefined,
+  ];
+  for (const root of roots) {
+    if (!root) continue;
+    const candidate = join(root, label, executable);
+    if (existsSync(candidate)) return candidate;
+  }
+  return undefined;
+}
+
 function defaultConfigs(): McpServerConfig[] {
   return APP_DEFINITIONS.map(({ id, label, commandEnv, legacyCommandEnv, args, defaultControlPort, connectArgument }) => ({
     id,
     label,
-    command: process.env[commandEnv] || process.env[legacyCommandEnv] || `${id}-cli`,
+    command: process.env[commandEnv] || process.env[legacyCommandEnv] || findInstalledCli(id, label) || `${id}-cli`,
     args: [...args],
     defaultControlPort,
     connectArgument,
