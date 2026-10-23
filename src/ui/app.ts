@@ -8,6 +8,7 @@ import { runAgentLoop } from "../agent/loop.js";
 import { PermissionEngine, type PermissionDecision } from "../agent/permissions.js";
 import type { ChatMessage, PermissionRequestInfo } from "../agent/types.js";
 import type { WorkbookHost } from "../host/types.js";
+import { checkProviderConnection } from "../providers/checkConnection.js";
 import {
   deleteCustomProviderProfile,
   loadActiveProviderId,
@@ -120,6 +121,9 @@ export class BeboApp extends LitElement {
   @state() private customProviderApiKey = "";
   @state() private customProviderPreset = "";
   @state() private providerSetupError = "";
+  @state() private providerTestMessage = "";
+  @state() private providerTestError = false;
+  @state() private providerTestRunning = false;
   @state() private pendingPermission: PendingPermission | null = null;
   @state() private pendingAsk: PendingAsk | null = null;
   @state() private askDraft = "";
@@ -170,6 +174,44 @@ export class BeboApp extends LitElement {
   private resolveModel(): string {
     const provider = listProviders().find((p) => p.id === this.providerId);
     return this.model || provider?.defaultModel || "";
+  }
+
+  private async testSelectedProvider(): Promise<void> {
+    const provider = listProviders().find((item) => item.id === this.providerId);
+    if (!provider) return;
+    if (!this.apiKey.trim() && provider.id !== "ollama" && !provider.id.startsWith("custom-")) {
+      this.providerTestError = true;
+      this.providerTestMessage = "Add this provider's API key first.";
+      return;
+    }
+    if (!this.resolveModel()) {
+      this.providerTestError = true;
+      this.providerTestMessage = "Enter a model name before testing the connection.";
+      return;
+    }
+
+    this.providerTestRunning = true;
+    this.providerTestError = false;
+    this.providerTestMessage = "Sending a short connection test…";
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 20_000);
+    try {
+      await checkProviderConnection(provider, {
+        model: this.resolveModel(),
+        apiKey: this.apiKey,
+        baseURL: this.baseURL || undefined,
+        signal: controller.signal,
+      });
+      this.providerTestMessage = `Connected to ${provider.label}. No workbook or chat history was included in the test.`;
+    } catch (error) {
+      this.providerTestError = true;
+      this.providerTestMessage = error instanceof Error
+        ? `Connection failed: ${error.message}`
+        : `Connection failed: ${String(error)}`;
+    } finally {
+      window.clearTimeout(timeout);
+      this.providerTestRunning = false;
+    }
   }
 
   private selectWorkTarget(value: string): void {
@@ -567,6 +609,7 @@ export class BeboApp extends LitElement {
               this.apiKey = s.apiKey;
               this.baseURL = s.baseURL ?? "";
               this.model = s.model ?? "";
+              this.providerTestMessage = "";
             }}
           >
             ${providers.map((p) => html`<option value=${p.id}>${p.label}</option>`)}
@@ -717,6 +760,15 @@ export class BeboApp extends LitElement {
           <label>Model
             <input .value=${this.model} placeholder=${provider?.defaultModel ?? ""} @input=${(e: Event) => (this.model = (e.target as HTMLInputElement).value)} />
           </label>
+          <section class="provider-test">
+            <button ?disabled=${this.providerTestRunning} @click=${() => this.testSelectedProvider()}>
+              ${this.providerTestRunning ? "Testing…" : "Test provider connection"}
+            </button>
+            <p class="hint">Sends a short generic prompt to this provider. It does not send workbook data or chat history; hosted providers may charge for the request.</p>
+            ${this.providerTestMessage
+              ? html`<p class=${this.providerTestError ? "mcp-error" : "hint"} role="status">${this.providerTestMessage}</p>`
+              : nothing}
+          </section>
           ${this.providerId.startsWith("custom-") ? html`
             <button class="danger" @click=${() => this.deleteSelectedCustomProvider()}>Delete this provider</button>
           ` : nothing}

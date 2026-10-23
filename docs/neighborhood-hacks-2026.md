@@ -18,6 +18,7 @@ The Bebo foundation predates the event window: the workspace contains source fil
 - Main application stack: TypeScript, Lit, Vite, and Vitest.
 - Host integration: Office.js for Excel; user-configured AI provider endpoints for model calls.
 - The demo submission must name the specific provider/model actually used in its recording. This repository does not contain provider credentials.
+- The provider connection check sends a fixed, short prompt and does not include workbook data or conversation history; hosted models may charge for that request.
 - Do not commit API keys, access tokens, private contact details, names, exact home addresses, or private community records.
 
 ## Submission checklist

@@ -9,7 +9,10 @@ and edit it autonomously, and works with **any** LLM. MIT licensed.
 - **Agentic, not chatty.** Multi-step plans that read, write, restructure, format,
   chart, and verify — with visible, reviewable actions.
 - **Model-agnostic BYOK.** OpenAI, Anthropic, Gemini, DeepSeek, Ollama, and multiple
-  custom OpenAI-compatible endpoints. Your keys, your models — or fully local and free.
+  custom OpenAI-compatible endpoints. Your keys, your models — or a local model without
+  provider API fees.
+- **Accessible provider setup.** Configure a provider and test the connection with a short,
+  generic prompt that does not include workbook data or chat history.
 - **Safe by design.** Three permission tiers (`read` runs free, `mutate` asks,
   `structure` always confirms), automatic checkpoints before every mutation, and
   one-click rollback. Plan mode for read-only exploration.
