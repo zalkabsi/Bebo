@@ -1,0 +1,31 @@
+{
+  "servers": [
+    {
+      "id": "wordcraft",
+      "command": "wordcraft-cli",
+      "args": [
+        "mcp",
+        "--automation-read-root",
+        "C:/Users/you/Documents",
+        "--automation-write-root",
+        "C:/Users/you/Documents/Bebo-output"
+      ]
+    },
+    {
+      "id": "gridcraft",
+      "command": "gridcraft-cli",
+      "args": ["mcp"]
+    },
+    {
+      "id": "deckcraft",
+      "command": "deckcraft-cli",
+      "args": [
+        "mcp",
+        "--automation-read-root",
+        "C:/Users/you/Documents",
+        "--automation-write-root",
+        "C:/Users/you/Documents/Bebo-output"
+      ]
+    }
+  ]
+}
