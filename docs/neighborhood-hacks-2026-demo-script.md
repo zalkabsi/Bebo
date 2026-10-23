@@ -47,3 +47,7 @@ Target runtime: about 3 minutes. The browser preview uses a mock workbook. Do no
 ## Produce the voiceover
 
 On Windows, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create-demo-audio.ps1` to generate a local WAV narration using the installed Microsoft desktop voice. This keeps the demo script off external speech services and requires no speech API key.
+
+## Produce the narrated video
+
+Keep Bebo's Vite server running, then capture the app screens with `node scripts/capture-demo-scenes.mjs`. The default demo URL is `http://127.0.0.1:5173/`; set `BEBO_DEMO_URL` if your server uses another address. Run `node scripts/render-demo-video.mjs`, open the printed local URL, and click **Render narrated demo**. After about three minutes the browser downloads `bebo-neighborhood-hacks-2026-demo.webm`. Move that file into `artifacts/` if you want to keep it next to the voiceover; generated captures and recordings are ignored by Git.

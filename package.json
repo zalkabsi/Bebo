@@ -7,7 +7,7 @@
   "author": "Bebo contributors",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aioa-agent/aioa"
+    "url": "https://github.com/zalkabsi/Bebo"
   },
   "scripts": {
     "dev": "vite",

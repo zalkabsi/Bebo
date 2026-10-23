@@ -24,7 +24,7 @@
   <Description DefaultValue="An open-source, model-agnostic, agentic AI assistant for Excel. Bring your own model key."/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
-  <SupportUrl DefaultValue="https://github.com/aioa-agent/aioa/issues"/>
+  <SupportUrl DefaultValue="https://github.com/zalkabsi/Bebo/issues"/>
 
   <AppDomains>
     <AppDomain>https://localhost:3000</AppDomain>

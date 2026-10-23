@@ -1,10 +1,22 @@
 import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve, sep } from "node:path";
+import { createServer } from "node:net";
+import { join, resolve, sep } from "node:path";
 
 const appUrl = process.env.BEBO_DEMO_URL || "http://127.0.0.1:5173/";
-const debugPort = Number(process.env.BEBO_DEMO_CDP_PORT || 9233);
+async function getAvailablePort() {
+  const server = createServer();
+  await new Promise((resolveListening, rejectListening) => {
+    server.once("error", rejectListening);
+    server.listen(0, "127.0.0.1", resolveListening);
+  });
+  const address = server.address();
+  await new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
+  return address.port;
+}
+
+const debugPort = Number(process.env.BEBO_DEMO_CDP_PORT || await getAvailablePort());
 const edge = process.env.BEBO_EDGE_PATH || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const outputDir = resolve("artifacts/demo-scenes");
 const profileDir = await mkdtemp(join(tmpdir(), "bebo-demo-edge-"));
@@ -42,7 +54,14 @@ async function waitForDevTools() {
       const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
       if (response.ok) {
         const targets = await response.json();
-        const page = targets.find((target) => target.type === "page" && target.webSocketDebuggerUrl);
+        const expected = new URL(appUrl);
+        const page = targets.find((target) => {
+          if (target.type !== "page" || !target.webSocketDebuggerUrl) return false;
+          try {
+            const actual = new URL(target.url);
+            return actual.origin === expected.origin && actual.pathname === expected.pathname;
+          } catch { return false; }
+        });
         if (page) return page;
       }
     } catch {
@@ -137,6 +156,11 @@ try {
     const button = [...(root?.querySelectorAll('button') ?? [])].find((item) => item.textContent.trim() === ${JSON.stringify(label)});
     if (!button) throw new Error('Could not find button: ' + ${JSON.stringify(label)});
     button.click();
+    const input = root?.querySelector('.composer input');
+    if (!input) throw new Error('Could not find the prompt composer.');
+    input.scrollLeft = 0;
+    input.setSelectionRange(0, 0);
+    input.blur();
     return true;
   })()`;
 

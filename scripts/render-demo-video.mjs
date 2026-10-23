@@ -1,18 +1,30 @@
 import { spawn } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join, resolve, sep } from "node:path";
-import { pathToFileURL } from "node:url";
+import { join, resolve, sep } from "node:path";
+import { createServer } from "node:net";
 
 const projectRoot = process.cwd();
 const artifactDir = resolve(projectRoot, "artifacts");
 const sceneDir = join(artifactDir, "demo-scenes");
 const audioPath = join(artifactDir, "neighborhood-hacks-2026-voiceover.wav");
 const outputBase = "bebo-neighborhood-hacks-2026-demo.webm";
+const appUrl = process.env.BEBO_DEMO_URL || "http://127.0.0.1:5173/";
+const rendererUrl = process.env.BEBO_DEMO_RENDERER_URL || new URL("artifacts/demo-renderer.html", appUrl).href;
 const edge = process.env.BEBO_EDGE_PATH || "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
-const debugPort = Number(process.env.BEBO_DEMO_RENDER_CDP_PORT || 9234);
+async function getAvailablePort() {
+  const server = createServer();
+  await new Promise((resolveListening, rejectListening) => {
+    server.once("error", rejectListening);
+    server.listen(0, "127.0.0.1", resolveListening);
+  });
+  const address = server.address();
+  await new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose()));
+  return address.port;
+}
+
+const debugPort = Number(process.env.BEBO_DEMO_RENDER_CDP_PORT || await getAvailablePort());
 const voicePath = resolve(audioPath);
-const profileDir = await mkdtemp(join(tmpdir(), "bebo-render-edge-"));
 
 if (!Number.isInteger(debugPort) || debugPort < 1024 || debugPort > 65535) {
   throw new Error("BEBO_DEMO_RENDER_CDP_PORT must be an available port from 1024 to 65535.");
@@ -105,8 +117,8 @@ for (const [segmentIndex, segment] of narrationSegments.entries()) {
 
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bebo demo renderer</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141a;color:#fff;font-family:Segoe UI,Arial,sans-serif}body{display:grid;place-items:center}canvas{width:1280px;height:720px;max-width:100vw;max-height:100vh;background:#151a20}</style></head>
-<body><canvas id="frame" width="1280" height="720"></canvas><audio id="voice" preload="auto"></audio><script>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141a;color:#fff;font-family:Segoe UI,Arial,sans-serif}body{display:grid;place-items:center}canvas{width:1280px;height:720px;max-width:100vw;max-height:100vh;background:#151a20}#start{position:fixed;right:24px;top:24px;border:0;border-radius:8px;padding:12px 18px;background:#62d8ae;color:#10221c;font:700 15px Segoe UI,Arial,sans-serif;cursor:pointer}#start:disabled{opacity:.6;cursor:wait}#status{position:fixed;right:24px;top:70px;max-width:360px;color:#d7e4df;font-size:13px;text-align:right}</style></head>
+<body><canvas id="frame" width="1280" height="720"></canvas><audio id="voice" preload="auto"></audio><button id="start" disabled>Preparing narrated demo…</button><div id="status">Loading screenshots and voiceover.</div><script>
 const imageSources=${JSON.stringify(imageData)};
 const cues=${JSON.stringify(cues)};
 const audioData="data:audio/wav;base64,${wav.toString("base64")}";
@@ -114,17 +126,25 @@ const expectedDuration=${durationSeconds};
 const canvas=document.getElementById("frame");
 const ctx=canvas.getContext("2d");
 const audio=document.getElementById("voice");
+const startButton=document.getElementById("start");
+const status=document.getElementById("status");
 audio.src=audioData;
 const images={};
 window.__renderReady=false;
 window.__renderDone=false;
 window.__renderError="";
+window.__renderStatus="Loading scene images and narration";
 window.__renderDuration=expectedDuration;
 function loadImage(name){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("Unable to load scene "+name));img.src=imageSources[name];});}
 Promise.all(Object.keys(imageSources).map(async name=>images[name]=await loadImage(name))).then(()=>{
-  audio.addEventListener("loadedmetadata",()=>window.__renderReady=true,{once:true});
+  window.__renderImageCount=Object.keys(images).length;
+  window.__renderStatus="Scene images loaded; waiting for narration metadata";
+  audio.addEventListener("loadedmetadata",()=>{window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";},{once:true});
+  audio.addEventListener("error",()=>window.__renderError="Narration audio error: "+(audio.error?.message||audio.error?.code||"unknown"),{once:true});
+  audio.load();
+  if(audio.readyState>=1){window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";}
   if(audio.readyState>=1)window.__renderReady=true;
-}).catch(error=>window.__renderError=String(error));
+}).catch(error=>{window.__renderError=String(error);window.__renderStatus="Failed to load a scene image";});
 function wrapText(text,maxWidth){const words=text.split(/\\s+/);const lines=[];let line="";for(const word of words){const candidate=line?line+" "+word:word;if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word;}else line=candidate;}if(line)lines.push(line);return lines;}
 function drawFrame(time){
   let elapsed=0;let cue=cues[cues.length-1];
@@ -156,6 +176,8 @@ window.startBeboRender=async()=>{
     recorder.onstop=()=>{
       const blob=new Blob(chunks,{type:"video/webm"});
       const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=${JSON.stringify(outputName)};document.body.append(link);link.click();link.remove();
+      status.textContent="Video ready. The download should appear in your browser.";
+      startButton.textContent="Video ready";
       setTimeout(()=>{URL.revokeObjectURL(link.href);window.__renderDone=true;window.__renderBytes=blob.size;},1000);
     };
     const draw=()=>{drawFrame(audio.currentTime||0);if(!window.__renderDone)requestAnimationFrame(draw);};
@@ -163,22 +185,28 @@ window.startBeboRender=async()=>{
     recorder.start(1000);
     audio.onended=()=>setTimeout(()=>{if(recorder.state!=="inactive")recorder.stop();audioContext.close();},500);
     await audio.play();
+    startButton.textContent="Recording narrated demo…";
+    status.textContent="The recording takes about three minutes. Leave this tab open until the download starts.";
     window.__renderStarted=true;
     return true;
-  }catch(error){window.__renderError=String(error);return false;}
+  }catch(error){window.__renderError=String(error);startButton.disabled=false;startButton.textContent="Retry render";status.textContent=String(error);return false;}
 };
+startButton.addEventListener("click",()=>window.startBeboRender());
 </script></body></html>`;
 
 const rendererPath = join(artifactDir, "demo-renderer.html");
 await writeFile(rendererPath, html, "utf8");
-const rendererUrl = pathToFileURL(rendererPath).href;
+if (process.env.BEBO_DEMO_HEADLESS !== "1") {
+  console.log(`${rendererUrl}\nClick “Render narrated demo” to create ${outputName}.`);
+  process.exit(0);
+}
+const profileDir = await mkdtemp(join(tmpdir(), "bebo-render-edge-"));
 const browser = spawn(edge, [
   "--headless=new",
   "--disable-gpu",
   "--disable-background-mode",
   "--no-first-run",
   "--no-default-browser-check",
-  "--allow-file-access-from-files",
   "--autoplay-policy=no-user-gesture-required",
   `--user-data-dir=${profileDir}`,
   `--remote-debugging-port=${debugPort}`,
@@ -203,7 +231,7 @@ try {
       const response = await fetch(`http://127.0.0.1:${debugPort}/json/list`);
       if (response.ok) {
         const targets = await response.json();
-        target = targets.find((item) => item.type === "page" && item.webSocketDebuggerUrl);
+        target = targets.find((item) => item.type === "page" && item.url === rendererUrl && item.webSocketDebuggerUrl);
         if (target) break;
       }
     } catch {}
@@ -269,7 +297,10 @@ try {
     await sleep(250);
   }
   const ready = await evaluate("Boolean(window.__renderReady)");
-  if (!ready) throw new Error("Timed out waiting for the video renderer and voiceover to load.");
+  if (!ready) {
+    const details = await evaluate(`({url:location.href,title:document.title,status:window.__renderStatus,error:window.__renderError,audioReadyState:document.querySelector('#voice')?.readyState,audioNetworkState:document.querySelector('#voice')?.networkState,audioError:document.querySelector('#voice')?.error?.code,loadedScenes:window.__renderImageCount||0,scriptCount:document.scripts.length})`);
+    throw new Error(`Timed out waiting for the video renderer and voiceover to load. ${JSON.stringify(details)}`);
+  }
 
   await evaluate("window.startBeboRender()");
   const startedAt = Date.now();

@@ -4,6 +4,14 @@
 
 Bebo Community Access
 
+## Tagline
+
+AI for the office tools you can access.
+
+## Thumbnail
+
+Use [`docs/assets/neighborhood-hacks-2026-thumbnail.png`](assets/neighborhood-hacks-2026-thumbnail.png) for the Devpost thumbnail. It is 1200 × 800 pixels (3:2) and under 5 MB.
+
 ## Elevator pitch
 
 Bebo is a provider-choice AI assistant for office work, including local models. Its community workflow helps turn verified observations into an action plan and accessible updates, without adding personal details to the tracker.
