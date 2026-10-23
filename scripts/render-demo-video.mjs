@@ -115,12 +115,19 @@ for (const [segmentIndex, segment] of narrationSegments.entries()) {
   }
 }
 
+const promptTextByImage = {
+  "community-plan": "I want to improve something in my local community. First ask me what specific problem I personally observed, what non-identifying evidence or public source supports it, who is affected as a group, and what change would count as success. Do not invent facts or ask for names, exact addresses, or private contact details. Separate observations from assumptions.",
+  "community-tracker-prompt": "Create a blank Community Action Plan sheet in this workbook. Use volunteer roles instead of names, and include public evidence/source and an impact measure. Do not add example people, locations, or unverified community facts. Ask me to confirm the sheet creation when prompted.",
+  "accessible-update": "Help me turn verified information I provide into a short, plain-language community update. Ask who it is for and which language(s) are needed. Do not invent facts or include names, exact addresses, or private contact details; mark missing facts as questions for me.",
+};
+
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bebo demo renderer</title>
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10141a;color:#fff;font-family:Segoe UI,Arial,sans-serif}body{display:grid;place-items:center}canvas{width:1280px;height:720px;max-width:100vw;max-height:100vh;background:#151a20}#start{position:fixed;right:24px;top:24px;border:0;border-radius:8px;padding:12px 18px;background:#62d8ae;color:#10221c;font:700 15px Segoe UI,Arial,sans-serif;cursor:pointer}#start:disabled{opacity:.6;cursor:wait}#status{position:fixed;right:24px;top:70px;max-width:360px;color:#d7e4df;font-size:13px;text-align:right}</style></head>
 <body><canvas id="frame" width="1280" height="720"></canvas><audio id="voice" preload="auto"></audio><button id="start" disabled>Preparing narrated demo…</button><div id="status">Loading screenshots and voiceover.</div><script>
 const imageSources=${JSON.stringify(imageData)};
 const cues=${JSON.stringify(cues)};
+const promptTextByImage=${JSON.stringify(promptTextByImage)};
 const audioData="data:audio/wav;base64,${wav.toString("base64")}";
 const expectedDuration=${durationSeconds};
 const canvas=document.getElementById("frame");
@@ -139,25 +146,69 @@ function loadImage(name){return new Promise((resolve,reject)=>{const img=new Ima
 Promise.all(Object.keys(imageSources).map(async name=>images[name]=await loadImage(name))).then(()=>{
   window.__renderImageCount=Object.keys(images).length;
   window.__renderStatus="Scene images loaded; waiting for narration metadata";
-  audio.addEventListener("loadedmetadata",()=>{window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";},{once:true});
+  audio.addEventListener("loadedmetadata",()=>{window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";drawFrame(0);startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";},{once:true});
   audio.addEventListener("error",()=>window.__renderError="Narration audio error: "+(audio.error?.message||audio.error?.code||"unknown"),{once:true});
   audio.load();
-  if(audio.readyState>=1){window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";}
+  if(audio.readyState>=1){window.__renderReady=true;window.__renderStatus="Scene images and narration metadata loaded";drawFrame(0);startButton.disabled=false;startButton.textContent="Render narrated demo";status.textContent="Click once to record and download the narrated video.";}
   if(audio.readyState>=1)window.__renderReady=true;
 }).catch(error=>{window.__renderError=String(error);window.__renderStatus="Failed to load a scene image";});
 function wrapText(text,maxWidth){const words=text.split(/\\s+/);const lines=[];let line="";for(const word of words){const candidate=line?line+" "+word:word;if(ctx.measureText(candidate).width>maxWidth&&line){lines.push(line);line=word;}else line=candidate;}if(line)lines.push(line);return lines;}
+function roundedRect(x,y,width,height,radius,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,width,height,radius);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
+function drawHeader(imageName){
+  ctx.fillStyle="#1e2025";ctx.fillRect(0,0,1280,54);
+  ctx.fillStyle="#f4f6f8";ctx.font="700 15px Segoe UI,Arial,sans-serif";ctx.fillText("Bebo",16,32);
+  roundedRect(52,8,506,38,7,"#24272d","#343942");
+  ctx.fillStyle="#f2f4f7";ctx.font="14px Segoe UI,Arial,sans-serif";ctx.fillText("Spreadsheet",66,32);
+  roundedRect(568,8,620,38,7,"#24272d","#343942");
+  const provider=imageName==="provider-ollama"||imageName==="settings-provider"?"Ollama (local, OpenAI-compatible)":"OpenAI";
+  ctx.fillStyle="#f2f4f7";ctx.fillText(provider,584,32);
+  roundedRect(1196,8,38,38,7,"#24272d","#343942");ctx.fillStyle="#f2f4f7";ctx.fillText("act",1203,32);
+  roundedRect(1240,8,30,38,7,"#24272d","#343942");ctx.fillStyle="#f2f4f7";ctx.fillText("⚙",1249,32);
+  ctx.fillStyle="#1a1d22";ctx.fillRect(0,54,1280,49);
+  ctx.fillStyle="#9ca6b3";ctx.font="italic 14px Segoe UI,Arial,sans-serif";
+  const notice="Browser preview uses sample data. Connect a supported spreadsheet app for live document access.";
+  ctx.fillText(notice,(1280-ctx.measureText(notice).width)/2,83);
+}
+function drawPrompt(imageName){
+  const prompt=promptTextByImage[imageName];if(!prompt)return;
+  roundedRect(54,426,1172,120,9,"#1e2228","#343942");
+  ctx.fillStyle="#9ce4c2";ctx.font="600 13px Segoe UI,Arial,sans-serif";ctx.fillText("Prompt composer · not submitted",72,451);
+  ctx.fillStyle="#e6eaf0";ctx.font="15px Segoe UI,Arial,sans-serif";
+  const lines=wrapText(prompt,1128).slice(0,3);lines.forEach((line,index)=>ctx.fillText(line,72,478+index*21));
+}
+function drawProviderPicker(){
+  roundedRect(362,132,556,265,12,"#20242a","#394049");
+  ctx.fillStyle="#f1f4f7";ctx.font="700 20px Segoe UI,Arial,sans-serif";ctx.fillText("Choose an AI provider",390,173);
+  ctx.fillStyle="#aeb8c3";ctx.font="14px Segoe UI,Arial,sans-serif";ctx.fillText("Use a hosted provider or connect a local model.",390,200);
+  const options=["OpenAI","Anthropic","Google Gemini","DeepSeek","Ollama · local"];
+  options.forEach((label,index)=>{
+    const x=390+(index%2)*248,y=224+Math.floor(index/2)*52;
+    roundedRect(x,y,226,38,7,index===4?"#20392f":"#292d34",index===4?"#58bd92":"#3a4049");
+    ctx.fillStyle="#e8edf2";ctx.font="14px Segoe UI,Arial,sans-serif";ctx.fillText(label,x+13,y+24);
+  });
+  ctx.fillStyle="#98a4b1";ctx.font="13px Segoe UI,Arial,sans-serif";ctx.fillText("Provider access is configured by each user.",390,375);
+}
 function drawFrame(time){
   let elapsed=0;let cue=cues[cues.length-1];
   for(const candidate of cues){const duration=expectedDuration*candidate.weight/cues.reduce((sum,item)=>sum+item.weight,0);if(time<elapsed+duration){cue=candidate;break;}elapsed+=duration;}
   const image=images[cue.image];
   ctx.fillStyle="#11161d";ctx.fillRect(0,0,1280,720);
-  ctx.drawImage(image,0,0,1280,720);
-  const shade=ctx.createLinearGradient(0,510,0,720);shade.addColorStop(0,"rgba(7,10,14,0.12)");shade.addColorStop(0.22,"rgba(7,10,14,0.9)");shade.addColorStop(1,"rgba(7,10,14,0.96)");ctx.fillStyle=shade;ctx.fillRect(0,500,1280,220);
-  ctx.fillStyle="#88e3bd";ctx.font="700 16px Segoe UI, Arial, sans-serif";ctx.fillText("BEBO  /  NEIGHBORHOOD HACKS 2026",52,545);
-  ctx.fillStyle="#ffffff";ctx.font="700 27px Segoe UI, Arial, sans-serif";ctx.fillText(cue.label,52,584);
-  ctx.fillStyle="#e4eaf0";ctx.font="22px Segoe UI, Arial, sans-serif";
-  const lines=wrapText(cue.text,1160).slice(0,3);lines.forEach((line,index)=>ctx.fillText(line,52,624+index*31));
-  ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(52,700,1176,3);ctx.fillStyle="#88e3bd";ctx.fillRect(52,700,1176*Math.min(1,time/expectedDuration),3);
+  drawHeader(cue.image);
+  if(cue.image.startsWith("settings-")){
+    // Keep the settings dialog itself and exclude the older captured app chrome.
+    ctx.drawImage(image,410,18,460,660,365,56,550,660);
+  }else{
+    // The central starter card is current UI content; the old capture's header/footer are omitted.
+    ctx.drawImage(image,380,263,520,248,340,162,600,286);
+    if(cue.image==="provider-ollama")drawProviderPicker();
+    else drawPrompt(cue.image);
+  }
+  const shade=ctx.createLinearGradient(0,558,0,720);shade.addColorStop(0,"rgba(7,10,14,0.12)");shade.addColorStop(0.18,"rgba(7,10,14,0.9)");shade.addColorStop(1,"rgba(7,10,14,0.96)");ctx.fillStyle=shade;ctx.fillRect(0,558,1280,162);
+  ctx.fillStyle="#88e3bd";ctx.font="700 14px Segoe UI, Arial, sans-serif";ctx.fillText("BEBO  /  NEIGHBORHOOD HACKS 2026",52,586);
+  ctx.fillStyle="#ffffff";ctx.font="700 23px Segoe UI, Arial, sans-serif";ctx.fillText(cue.label,52,615);
+  ctx.fillStyle="#e4eaf0";ctx.font="19px Segoe UI, Arial, sans-serif";
+  const lines=wrapText(cue.text,1160).slice(0,3);lines.forEach((line,index)=>ctx.fillText(line,52,646+index*22));
+  ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(52,704,1176,3);ctx.fillStyle="#88e3bd";ctx.fillRect(52,704,1176*Math.min(1,time/expectedDuration),3);
 }
 window.startBeboRender=async()=>{
   try{

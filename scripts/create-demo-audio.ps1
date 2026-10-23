@@ -53,5 +53,5 @@ finally {
   $synthesizer.Dispose()
 }
 
-$voiceName = if ($null -ne $voice) { $voice.Name } else { 'System default desktop voice' }
-Write-Output "Created $outputPath using $voiceName."
+$voiceDescription = if ($null -ne $voice) { 'an installed desktop voice' } else { 'the system default desktop voice' }
+Write-Output "Created $outputPath using $voiceDescription."

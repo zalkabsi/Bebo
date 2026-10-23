@@ -17,6 +17,7 @@
     "test": "vitest run",
     "start:gridcraft": "node scripts/start-gridcraft-for-bebo.mjs",
     "check:gridcraft": "node scripts/check-gridcraft-mcp.mjs",
+    "check:demo": "node scripts/check-demo-artifact.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

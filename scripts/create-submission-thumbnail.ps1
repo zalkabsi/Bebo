@@ -31,6 +31,11 @@ $soft = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(36, 64
 $softPen = [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb(82, 137, 128), 1.5)
 $frameBrush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(226, 235, 235))
 $framePen = [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb(100, 194, 226, 215), 2)
+$screenBrush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(22, 25, 31))
+$screenTopBrush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(30, 33, 39))
+$screenOutline = [System.Drawing.Pen]::new([System.Drawing.Color]::FromArgb(52, 57, 66), 1)
+$uiFont = [System.Drawing.Font]::new("Segoe UI", 12, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+$microFont = [System.Drawing.Font]::new("Segoe UI", 9, [System.Drawing.FontStyle]::Italic, [System.Drawing.GraphicsUnit]::Pixel)
 $shadowBrush = [System.Drawing.SolidBrush]::new([System.Drawing.Color]::FromArgb(65, 0, 0, 0))
 $badgeFont = [System.Drawing.Font]::new("Segoe UI", 16, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
 $titleFont = [System.Drawing.Font]::new("Segoe UI", 88, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
@@ -75,12 +80,30 @@ try {
     $graphics.DrawRectangle($softPen, $chip.X, $chipY, $chip.Width, 38)
     $graphics.DrawString($chip.Label, $chipFont, $white, $chip.X + 10, $chipY + 9)
   }
-  $graphics.DrawString("Excel-first prototype  |  Open source", $noteFont, $muted, 78, 635)
+  $graphics.DrawString("Spreadsheet workflow  |  Open source", $noteFont, $muted, 78, 635)
 
   $graphics.FillRectangle($shadowBrush, 524, 207, 620, 358)
   $graphics.FillRectangle($frameBrush, 514, 197, 620, 358)
   $image = [System.Drawing.Image]::FromFile($scenePath)
-  $graphics.DrawImage($image, [System.Drawing.Rectangle]::new(524, 207, 600, 338))
+  $graphics.FillRectangle($screenBrush, 524, 207, 600, 338)
+  $graphics.FillRectangle($screenTopBrush, 524, 207, 600, 30)
+  $graphics.DrawString("Bebo", $chipFont, $white, 536, 214)
+  $graphics.FillRectangle($soft, 574, 212, 190, 21)
+  $graphics.DrawRectangle($screenOutline, 574, 212, 190, 21)
+  $graphics.DrawString("Spreadsheet", $uiFont, $white, 582, 215)
+  $graphics.FillRectangle($soft, 772, 212, 338, 21)
+  $graphics.DrawRectangle($screenOutline, 772, 212, 338, 21)
+  $graphics.DrawString("OpenAI", $uiFont, $white, 780, 215)
+  $graphics.DrawString("Browser preview uses sample data · no live document connected", $microFont, $muted, 536, 244)
+  $graphics.DrawImage(
+    $image,
+    [System.Drawing.Rectangle]::new(536, 263, 576, 276),
+    380,
+    263,
+    520,
+    248,
+    [System.Drawing.GraphicsUnit]::Pixel
+  )
   $graphics.DrawRectangle($framePen, 514, 197, 620, 358)
 
   $bitmap.Save($outputPath, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -100,6 +123,9 @@ finally {
   $softPen.Dispose()
   $frameBrush.Dispose()
   $framePen.Dispose()
+  $screenBrush.Dispose()
+  $screenTopBrush.Dispose()
+  $screenOutline.Dispose()
   $shadowBrush.Dispose()
   $badgeFont.Dispose()
   $titleFont.Dispose()
@@ -107,4 +133,6 @@ finally {
   $bodyFont.Dispose()
   $chipFont.Dispose()
   $noteFont.Dispose()
+  $uiFont.Dispose()
+  $microFont.Dispose()
 }

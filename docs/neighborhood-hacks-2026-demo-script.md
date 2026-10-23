@@ -1,12 +1,12 @@
 # Neighborhood Hacks demo narration and shot list
 
-Target runtime: about 3 minutes. The browser preview uses a mock workbook. Do not imply that an Excel edit, live provider call, or Craft app connection happened during this recording. Never display provider keys or personal records.
+Target runtime: about 3 minutes. The browser preview uses a sample workbook. Do not imply that a workbook edit, live provider call, or Craft app connection happened during this recording. Never display provider keys or personal records.
 
 ## 0:00–0:25 — Introduce the access gap
 
 **Show:** Bebo home screen with the community quick starts and the browser preview notice visible.
 
-**Narration:** “Some people I’ve spoken with do not have access to Microsoft products. Newer office apps can give them another place to work, but those apps may not include the AI support they want. Bebo is an open-source companion that brings provider choice and practical community starters into office workflows. This browser preview uses a mock workbook, so I’ll show the setup and prompts without presenting a live workbook change.”
+**Narration:** “Some people I’ve spoken with do not have access to familiar office software. Newer open office apps give them another place to work, but may not include the AI support they want. Bebo is an open-source companion that brings provider choice and practical community starters into office workflows. This browser preview uses sample data, so I’ll show the setup and prompts without presenting a live document change.”
 
 ## 0:25–0:50 — Show provider choice
 
@@ -24,7 +24,7 @@ Target runtime: about 3 minutes. The browser preview uses a mock workbook. Do no
 
 **Show:** Click “Create a project tracker,” then show the privacy reminder and the prompt in the composer.
 
-**Narration:** “This starter prepares a request for a community action tracker. In the Excel add-in, the implemented action-board tool creates a new sheet instead of overwriting an existing one and asks the user before changing workbook structure. Its blank template uses volunteer roles rather than names, with fields for actions, status, target dates, public evidence, and progress. I’m showing the request here; this mock workbook is not executing the change.”
+**Narration:** “This starter prepares a request for a community action tracker. With a connected spreadsheet app, the action-board tool creates a new sheet instead of overwriting existing content and asks before changing document structure. Its blank template uses volunteer roles rather than names, with fields for actions, status, target dates, public evidence, and progress. I’m showing the request here; this preview is not executing the change.”
 
 ## 1:45–2:10 — Show an accessible update starter
 
@@ -42,12 +42,14 @@ Target runtime: about 3 minutes. The browser preview uses a mock workbook. Do no
 
 **Show:** Craft app settings, then the Bebo home screen or an end card.
 
-**Narration:** “Bebo also has a local MCP companion for WordCraft, GridCraft, and DeckCraft. Those connections currently require Bebo to run locally, and the apps do not yet have Bebo chat panels installed inside them. The prototype is Excel first. Next, I want to make setup easier and test these workflows with people who rely on office alternatives, then improve the product from their feedback.”
+**Narration:** “Bebo also connects locally to WordCraft, GridCraft, and DeckCraft. Today, the companion runs alongside those apps; it does not add a chat panel inside their windows. The prototype starts with a spreadsheet workflow. Next, I want to make setup easier and test these workflows with people who rely on office alternatives, then improve the product from their feedback.”
 
 ## Produce the voiceover
 
-On Windows, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create-demo-audio.ps1` to generate a local WAV narration using the installed Microsoft desktop voice. This keeps the demo script off external speech services and requires no speech API key.
+On Windows, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create-demo-audio.ps1` to generate a local WAV narration using an installed desktop voice. This keeps the demo script off external speech services and requires no speech API key.
 
 ## Produce the narrated video
 
 Keep Bebo's Vite server running, then capture the app screens with `node scripts/capture-demo-scenes.mjs`. The default demo URL is `http://127.0.0.1:5173/`; set `BEBO_DEMO_URL` if your server uses another address. Run `node scripts/render-demo-video.mjs`, open the printed local URL, and click **Render narrated demo**. After about three minutes the browser downloads `bebo-neighborhood-hacks-2026-demo.webm`. Move that file into `artifacts/` if you want to keep it next to the voiceover; generated captures and recordings are ignored by Git.
+
+Run `npm run check:demo` after rendering to confirm the saved video contains VP8 video and Opus audio, and that the narration script does not include either product name removed from the video.
