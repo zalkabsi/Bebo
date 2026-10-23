@@ -1,45 +1,49 @@
 # Neighborhood Hacks demo narration and shot list
 
-Target runtime: about 3 minutes. Keep the screen recording on Bebo only; use a test workbook with no real personal or community records. Do not display provider keys. Say which provider and model were actually used only after recording with one.
+Target runtime: about 3 minutes. The browser preview uses a mock workbook. Do not imply that an Excel edit, live provider call, or Craft app connection happened during this recording. Never display provider keys or personal records.
 
-## 0:00–0:20 — Introduce the access gap
+## 0:00–0:25 — Introduce the access gap
 
-**Show:** Bebo home screen with the community quick starts visible.
+**Show:** Bebo home screen with the community quick starts and the browser preview notice visible.
 
-**Narration:** “I have seen many people who cannot access Microsoft products. Newer office apps give them another way to work, but AI support is still missing from those workflows. Bebo is my attempt to close that gap by bringing provider choice to office work.”
+**Narration:** “Some people I’ve spoken with do not have access to Microsoft products. Newer office apps can give them another place to work, but those apps may not include the AI support they want. Bebo is an open-source companion that brings provider choice and practical community starters into office workflows. This browser preview uses a mock workbook, so I’ll show the setup and prompts without presenting a live workbook change.”
 
-## 0:20–0:45 — Show provider choice
+## 0:25–0:50 — Show provider choice
 
-**Show:** Provider selector and Settings. Keep the API key field empty or obscured. Do not run a live hosted connection test unless you want to incur that provider’s charge.
+**Show:** Provider selector, then Settings. Keep all credential fields empty.
 
-**Narration:** “Users can choose among supported providers, configure an OpenAI-compatible endpoint, or select Ollama if they already run a local model. That means people can use a provider they can access, rather than being locked to one AI service. A local model still needs compatible software and hardware.”
+**Narration:** “Users can choose from the providers shown here, configure an OpenAI-compatible endpoint, or use Ollama when they already have a local model installed. Users bring their own provider access. A local model can avoid hosted API fees, but it still needs compatible software and suitable hardware. No provider is called in this demo.”
 
-## 0:45–1:10 — Start a community plan
+## 0:50–1:15 — Start a community plan
 
-**Show:** Click “Plan a community project.” Show the prompt filled in the composer, without submitting private details.
+**Show:** Click “Plan a community project” and show the prompt in the composer without submitting it.
 
-**Narration:** “The community starter asks for a problem the user actually observed, what non-identifying evidence supports it, who is affected as a group, and what success would look like. It tells the assistant to separate facts from assumptions and not invent interviews or local statistics.”
+**Narration:** “The community starter asks what problem the user personally observed, what public or non-identifying evidence supports it, who is affected as a group, and what success would look like. It instructs the assistant to separate observations from assumptions and not invent local facts, interviews, or statistics. People can begin with what they know without entering names or exact addresses.”
 
-## 1:10–1:50 — Create the action tracker
+## 1:15–1:45 — Prepare an action tracker
 
-**Show:** Choose the tracker starter and submit it using a provider/model you have actually configured. Show the permission confirmation, approve once, and show the tool result. If using Excel, show the new Community Action Plan sheet.
+**Show:** Click “Create a project tracker,” then show the privacy reminder and the prompt in the composer.
 
-**Narration:** “The tracker is created as a new sheet, so an existing sheet is not overwritten. Before the change, Bebo asks for confirmation. The blank template uses volunteer roles rather than names and includes action, status, target date, public evidence, an impact measure, and a progress update. It does not add sample people or made-up neighborhood facts.”
+**Narration:** “This starter prepares a request for a community action tracker. In the Excel add-in, the implemented action-board tool creates a new sheet instead of overwriting an existing one and asks the user before changing workbook structure. Its blank template uses volunteer roles rather than names, with fields for actions, status, target dates, public evidence, and progress. I’m showing the request here; this mock workbook is not executing the change.”
 
-## 1:50–2:20 — Show an accessible update starter
+## 1:45–2:10 — Show an accessible update starter
 
-**Show:** Return to the community starters or open a fresh conversation and select “Draft an accessible update.”
+**Show:** Click “Draft an accessible update” and show the prompt in the composer.
 
-**Narration:** “The update starter helps turn information the user has verified into a short, plain-language update. It asks who the update is for and which languages are needed, and it marks missing facts as questions instead of filling them in.”
+**Narration:** “The accessible update starter helps turn information the user has verified into a short, plain-language update. It asks who the update is for and which languages are needed. If a fact is missing, it asks for the missing information instead of filling it in. That keeps the user in control of what gets communicated.”
 
-## 2:20–2:45 — Explain privacy and provider flow
+## 2:10–2:35 — Explain provider and privacy choices
 
-**Show:** Settings provider connection note and the tracker’s privacy reminder. Never reveal a key.
+**Show:** Provider settings and the community privacy reminder. Never reveal a key.
 
-**Narration:** “The connection check sends only a generic prompt, not workbook data or chat history. For actual office tasks, the selected provider may receive the content needed to answer. Bebo keeps provider keys in the client and does not add telemetry. The tracker also reminds people to use group-level information and public evidence.”
+**Narration:** “The connection check sends a fixed generic prompt, not workbook data or chat history. When someone asks an AI provider to work with office content, the selected provider may receive the content needed to answer. Bebo keeps provider keys in the browser client and does not add telemetry. The starter also reminds users to work with group-level information and public evidence.”
 
-## 2:45–3:05 — Close with current limits and next steps
+## 2:35–3:00 — Show the Craft companion and close
 
-**Show:** Bebo title, then a simple end card listing the next steps.
+**Show:** Craft app settings, then the Bebo home screen or an end card.
 
-**Narration:** “The current prototype demonstrates the community workflow in Excel. The Craft app companion still needs Bebo running locally, and direct chat panels inside WordCraft, GridCraft, and DeckCraft are planned. Next I want to remove that setup step and test this workflow with people who use these office alternatives.”
+**Narration:** “Bebo also has a local MCP companion for WordCraft, GridCraft, and DeckCraft. Those connections currently require Bebo to run locally, and the apps do not yet have Bebo chat panels installed inside them. The prototype is Excel first. Next, I want to make setup easier and test these workflows with people who rely on office alternatives, then improve the product from their feedback.”
+
+## Produce the voiceover
+
+On Windows, run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/create-demo-audio.ps1` to generate a local WAV narration using the installed Microsoft desktop voice. This keeps the demo script off external speech services and requires no speech API key.
